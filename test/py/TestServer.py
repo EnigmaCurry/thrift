@@ -201,7 +201,7 @@ if server_type == 'THttpServer':
 host = None
 if options.ssl:
   from thrift.transport import TSSLSocket
-  transport = TSSLSocket.TSSLServerSocket(host, options.port, certfile='test_cert.pem')
+  transport = TSSLSocket.TSSLServerSocket(host, options.port, certfile='test_cert.pem', validate=False, ca_certs='test_ca.pem')
 else:
   transport = TSocket.TServerSocket(host, options.port)
 tfactory = TTransport.TBufferedTransportFactory()
@@ -233,7 +233,7 @@ elif server_type == "TProcessPoolServer":
         pass
     signal.signal(signal.SIGALRM, clean_shutdown)
     signal.alarm(2)
-  set_alarm()
+  #set_alarm()
 else:
   # look up server class dynamically to instantiate server
   ServerClass = getattr(TServer, server_type)

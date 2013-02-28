@@ -149,7 +149,8 @@ class TBufferedTransport(TTransportBase, CReadableTransport):
     return self.__trans.open()
 
   def close(self):
-    return self.__trans.close()
+    if self.__trans:
+      return self.__trans.close()
 
   def read(self, sz):
     ret = self.__rbuf.read(sz)

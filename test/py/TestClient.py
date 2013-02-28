@@ -72,7 +72,7 @@ class AbstractTest(unittest.TestCase):
     else:
       if options.ssl:
         from thrift.transport import TSSLSocket
-        socket = TSSLSocket.TSSLSocket(options.host, options.port, validate=False)
+        socket = TSSLSocket.TSSLSocket(options.host, options.port, validate=False, certfile='test_cert.pem')
       else:
         socket = TSocket.TSocket(options.host, options.port)
       # frame or buffer depending upon args

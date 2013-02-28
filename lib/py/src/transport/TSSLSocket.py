@@ -43,7 +43,8 @@ class TSSLSocket(TSocket.TSocket):
                port=9090,
                validate=True,
                ca_certs=None,
-               unix_socket=None):
+               unix_socket=None,
+               certfile=None):
     """Create SSL TSocket
 
     @param validate: Set to False to disable SSL certificate validation
@@ -69,6 +70,11 @@ class TSSLSocket(TSocket.TSocket):
         raise IOError('Certificate Authority ca_certs file "%s" '
                       'is not readable, cannot validate SSL '
                       'certificates.' % (ca_certs))
+    self.certfile = certfile
+    if certfile and not os.access(certfile, os.R_OK):
+        raise IOError('Client certificate file "%s" '
+                      'is not readable, cannot send it to the server.'
+                      % (cerfile))
     TSocket.TSocket.__init__(self, host, port, unix_socket)
 
   def open(self):
@@ -82,7 +88,8 @@ class TSSLSocket(TSocket.TSocket):
                                       ssl_version=self.SSL_VERSION,
                                       do_handshake_on_connect=True,
                                       ca_certs=self.ca_certs,
-                                      cert_reqs=self.cert_reqs)
+                                      cert_reqs=self.cert_reqs,
+                                      certfile=self.certfile)
         self.handle.settimeout(self._timeout)
         try:
           self.handle.connect(ip_port)
@@ -156,7 +163,9 @@ class TSSLServerSocket(TSocket.TServerSocket):
                host=None,
                port=9090,
                certfile='cert.pem',
-               unix_socket=None):
+               ca_certs=None,
+               unix_socket=None,
+               validate=False):
     """Initialize a TSSLServerSocket
 
     @param certfile: filename of the server certificate, defaults to cert.pem
@@ -167,8 +176,21 @@ class TSSLServerSocket(TSocket.TServerSocket):
     @type host: str
     @param port: The port to listen on for inbound connections.
     @type port: int
+    @param ca_certs: Filename to the Certificate Authority pem file, possibly a
+    file downloaded from: http://curl.haxx.se/ca/cacert.pem  This is passed to
+    the ssl_wrap function as the 'ca_certs' parameter.
+    @type ca_certs: str
+    @param validate: Set to True to enable SSL client certificate validation
+    @type validate: bool
     """
     self.setCertfile(certfile)
+    self.ca_certs = ca_certs
+
+    if not validate:
+      self.cert_reqs = ssl.CERT_NONE
+    else:
+      self.cert_reqs = ssl.CERT_REQUIRED
+
     TSocket.TServerSocket.__init__(self, host, port)
 
   def setCertfile(self, certfile):
@@ -188,7 +210,8 @@ class TSSLServerSocket(TSocket.TServerSocket):
     plain_client, addr = self.handle.accept()
     try:
       client = ssl.wrap_socket(plain_client, certfile=self.certfile,
-                      server_side=True, ssl_version=self.SSL_VERSION)
+                      server_side=True, ssl_version=self.SSL_VERSION, 
+                      ca_certs=self.ca_certs, cert_reqs=self.cert_reqs)
     except ssl.SSLError, ssl_exc:
       # failed handshake/ssl wrap, close socket to client
       plain_client.close()
