@@ -201,7 +201,7 @@ if server_type == 'THttpServer':
 host = None
 if options.ssl:
   from thrift.transport import TSSLSocket
-  transport = TSSLSocket.TSSLServerSocket(host, options.port, certfile='test_cert.pem', validate=False, ca_certs='test_ca.pem')
+  transport = TSSLSocket.TSSLServerSocket(host, options.port, certfile='test_cert.pem', validate=True, ca_certs='test_ca.pem')
 else:
   transport = TSocket.TServerSocket(host, options.port)
 tfactory = TTransport.TBufferedTransportFactory()
